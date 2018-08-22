@@ -3,6 +3,7 @@
 from __future__ import absolute_import
 from __future__ import division
 
+import os
 import time
 import datetime
 import math
@@ -247,7 +248,7 @@ class DeepSpeech2(object):
             epoch_duration = time.time() - epoch_start
             tf.logging.info("Epoch: %d/%d, loss: %.3f, error rate: %.3f, time: %.2f sec" % (
                 epoch + 1, epochs, train_cost, train_err, epoch_duration))
-            self.saver.save(self.sess, self.savedir + self.hyparam.savefile, global_step=epoch)
+            self.saver.save(self.sess, os.path.join(self.savedir, self.hyparam.savefile), global_step=epoch)
                                    
         train_duration = time.time() - train_start
         tf.logging.info("Training complete, total duration: %2.f min" % (train_duration / 60))
