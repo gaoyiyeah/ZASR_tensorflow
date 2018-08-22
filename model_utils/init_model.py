@@ -4,6 +4,7 @@ from __future__ import absolute_import
 from __future__ import division
 
 import time
+import datetime
 import math
 import numpy as np
 import tensorflow as tf
@@ -13,6 +14,8 @@ from data_utils import utils
 from conf.hyparam import Config
 from model_utils import network
 from utils.decoder.model import LM_decoder
+
+tf.logging.set_verbosity(tf.logging.INFO)
 
 class DeepSpeech2(object):
     ''' Class to init model
@@ -41,7 +44,7 @@ class DeepSpeech2(object):
 
     def add_placeholders(self):
         # input tensor for log filter or MFCC features
-        self.input_tensor = tf.placeholder( tf.float32,
+        self.input_tensor = tf.placeholder(tf.float32,
                                           [None, None, self.n_dim],
                                           name='input')
         self.text = tf.sparse_placeholder(tf.int32, name='text')
@@ -158,14 +161,13 @@ class DeepSpeech2(object):
         self.sess.run(tf.global_variables_initializer())
                     
         ckpt = tf.train.latest_checkpoint(self.savedir)
-        print "ckpt:", ckpt
+        tf.logging.info("Latest checkpoint: %s", (ckpt))
         self.startepo = 0
         if ckpt != None:
             self.saver.restore(self.sess, ckpt)
             ind = ckpt.rfind("-")
             self.startepo = int(ckpt[ind + 1:])
-            print(self.startepo)
-        print()           
+            tf.logging.info("Start epoch: %d", (self.startepo + 1))
                           
     def add_summary(self):
         self.merged = tf.summary.merge_all()
@@ -190,25 +192,26 @@ class DeepSpeech2(object):
         return  results[0].encode('utf-8')
                           
     def train(self):      
-        epochs = 120      
-        section = '\n{0:=^40}\n'
-        print section.format('Start training...')
-                          
+        epochs = self.hyparam.num_epoch
+        batch_step_interval = self.hyparam.batch_step_interval
+        tf.logging.info("Start training...")
+
         train_start = time.time()
         for epoch in range(epochs):
             epoch_start = time.time()
             if epoch < self.startepo:
-                continue  
-                          
-            print "Current epoch ：", epoch, "  the total epochs is ", epochs
+                continue
+
+            tf.logging.info("Current epoch: %d/%d %s" % (epoch + 1, epochs, datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')))
             n_batches_epoch = int(np.ceil(len(self.text_labels) / self.hyparam.batch_size))
-            print "CUrrent epoch contains batchs: ", n_batches_epoch, " the batch size is ：", self.hyparam.batch_size
-                          
+            tf.logging.info("Batch size: %d" % (self.hyparam.batch_size))
+
             train_cost = 0
             train_err = 0
             next_idx = 0  
 
             for batch in range(n_batches_epoch):
+                tf.logging.info("Current batch: %d/%d %s" % (batch + 1, n_batches_epoch, datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')))
                 next_idx, self.audio_features, self.audio_features_len, self.sparse_labels, wav_files = utils.next_batch(
                     next_idx,
                     self.hyparam.batch_size,
@@ -222,32 +225,33 @@ class DeepSpeech2(object):
                 batch_cost, _ = self.sess.run([self.avg_loss, self.optimizer], feed_dict=self.get_feed_dict())
                 train_cost += batch_cost
  
-                if (batch + 1) % 70 == 0:
+                if (batch + 1) % batch_step_interval == 0:
+                    tf.logging.info('Start merge: %s', datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
                     rs = self.sess.run(self.merged, feed_dict=self.get_feed_dict())
                     self.writer.add_summary(rs, batch)
- 
-                    print 'Current batch :', batch, ' Loss: ', train_cost / (batch + 1)
- 
+
+                    tf.logging.info("Current batch: %d/%d, loss: %.3f, error rate: %.3f" % (
+                        batch + 1, n_batches_epoch, train_cost / (batch + 1), train_err))
+                    tf.logging.info('Start decode: %s', datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
                     d, train_err = self.sess.run([self.decoded[0], self.label_err], feed_dict=self.get_feed_dict(dropout=1.0))
                     dense_decoded = tf.sparse_tensor_to_dense(d, default_value=-1).eval(session=self.sess)
                     dense_labels = utils.trans_tuple_to_texts_ch(self.sparse_labels, self.words)
- 
-                    print 'error rate: ', train_err
+
                     for orig, decoded_array in zip(dense_labels, dense_decoded):
                         # convert to strings
                         decoded_str = utils.trans_array_to_text_ch(decoded_array, self.words)
-                        print 'Orinal inputs: ', orig
-                        print 'Transcript: ', decoded_str
+                        tf.logging.info("Reference: %s" % (orig))
+                        tf.logging.info("Transcript: %s" % (decoded_str))
                         break
  
             epoch_duration = time.time() - epoch_start
-            log = 'Epoch {}/{}, Loss: {:.3f}, error rate: {:.3f}, time: {:.2f} sec'
-            print(log.format(epoch, epochs, train_cost, train_err, epoch_duration))
+            tf.logging.info("Epoch: %d/%d, loss: %.3f, error rate: %.3f, time: %.2f sec" % (
+                epoch + 1, epochs, train_cost, train_err, epoch_duration))
             self.saver.save(self.sess, self.savedir + self.hyparam.savefile, global_step=epoch)
                                    
         train_duration = time.time() - train_start
-        print('Training complete, total duration: {:.2f} min'.format(train_duration / 60))
-        self.sess.close()          
+        tf.logging.info("Training complete, total duration: %2.f min" % (train_duration / 60))
+        self.sess.close()
                                    
     def test(self):                
         index = 0                  
