@@ -26,19 +26,22 @@ class Config():
         self.use_bn = True # Batch normalization
 
         # Decoder
-        self.use_lm_decoder = True # Wether use lm decoder. If False, use tf.ctc_beam_search_decoder
+        self.use_lm_decoder = True # Whether use lm decoder. If False, use tf.ctc_beam_search_decoder
         self.alpha = 1.2
         self.beta = 2.5
         self.cutoff_prob = 0.99
         self.cutoff_top_n = 10
         self.num_proc_bsearch = 8
         self.beam_size = 400
-        self.lang_model_path = './models/lm/zh_giga.no_cna_cmn.prune01244.klm' # you can download it in https://github.com/PaddlePaddle/DeepSpeech
+        self.lang_model_path = 'models/lm/zh_giga.no_cna_cmn.prune01244.klm' # you can download it in https://github.com/PaddlePaddle/DeepSpeech
 
         # Config path
         self.vocab_path = u'data/aishell/vocab.txt'
-        self.wav_path = u'/media/nlp/23ACE59C56A55BF3/wav_file/thchs30/thchs30_tensorflow/wav/'
-        self.lable_file = u'/media/nlp/23ACE59C56A55BF3/wav_file/thchs30/thchs30_tensorflow/doc/trans/test.word.txt'
-        self.savedir = u'/media/nlp/23ACE59C56A55BF3/wav_file/thchs30/thchs30_tensorflow/'
+        self.wav_path = u'/mnt/client/lustre_cpu/gaoyi01/aishell/data_aishell/wav/'
+        self.label_file = u'/mnt/client/lustre_cpu/gaoyi01/aishell/data_aishell/transcript/aishell_transcript_v0.8.txt'
+        self.savedir = u'/mnt/client/lustre_cpu/gaoyi01/aishell/data_aishell'
         self.savefile = u'speech.cpkt'
-        self.tensorboardfile = u'/media/nlp/23ACE59C56A55BF3/wav_file/thchs30/thchs30_tensorflow/wav/log'
+        self.tensorboardfile = u'/mnt/client/lustre_cpu/gaoyi01/aishell/data_aishell/log'
+
+        self.batch_step_interval = 15000
+        self.num_epoch = 120
