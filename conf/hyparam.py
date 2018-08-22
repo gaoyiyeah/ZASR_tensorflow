@@ -37,11 +37,11 @@ class Config():
 
         # Config path
         self.vocab_path = u'data/aishell/vocab.txt'
-        self.wav_path = u'/mnt/client/lustre_cpu/gaoyi01/aishell/data_aishell/wav/'
-        self.label_file = u'/mnt/client/lustre_cpu/gaoyi01/aishell/data_aishell/transcript/aishell_transcript_v0.8.txt'
-        self.savedir = u'/mnt/client/lustre_cpu/gaoyi01/aishell/data_aishell'
+        self.wav_path = u'data_aishell/wav'
+        self.label_file = u'data_aishell/transcript/aishell_transcript_v0.8.txt'
+        self.savedir = u'work/aishell'
         self.savefile = u'speech.cpkt'
-        self.tensorboardfile = u'/mnt/client/lustre_cpu/gaoyi01/aishell/data_aishell/log'
+        self.tensorboardfile = u'work/aishell/log'
 
-        self.batch_step_interval = 15000
-        self.num_epoch = 120
+        self.batch_step_interval = 2000
+        self.num_epoch = 100
