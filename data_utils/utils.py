@@ -216,7 +216,7 @@ def audiofile_to_input_vector(audio_filename, n_input, n_context):
         # padding with 0 for the first of 9，mfcc features
         need_empty_past = max(0, (context_past_min - time_slice))
         empty_source_past = list(empty_mfcc for empty_slots in range(need_empty_past))
-        data_source_past = orig_inputs[ max(0, time_slice - n_context):time_slice]
+        data_source_past = orig_inputs[max(0, time_slice - n_context):time_slice]
 
         # padding with 0 for the last of 9，mfcc features
         need_empty_future = max(0, (time_slice - context_future_max))
@@ -233,13 +233,13 @@ def audiofile_to_input_vector(audio_filename, n_input, n_context):
         else:
             future = data_source_future
 
-        past = np.reshape(past, n_context * 39)
+        past = np.reshape(past, n_context * n_input)
         now = orig_inputs[time_slice]
         future = np.reshape(future, n_context * n_input)
         train_inputs[time_slice] = np.concatenate((past, now, future))
 
     # Tran data to Norm distribution, minus mean value then over the varr
-    train_inputs = (train_inputs - np.mean(train_inputs)) / np.std(train_inputs)
+    train_inputs = (train_inputs - np.mean(train_inputs, axis=0)) / np.std(train_inputs, axis=0)
 
     # shape of train_inputs: (shape(orig_inputs)/2, n_context * 2 * 39 + 39)
     return train_inputs 
