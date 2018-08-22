@@ -14,7 +14,7 @@ from collections import Counter
 import os.path
 import sys
 
-sys.path.append(os.path.dirname(__file__) + "/../")
+sys.path.insert(0, os.path.dirname(__file__) + "/../")
 from data_utils.utility import read_manifest
 from utils.utility import add_arguments, print_arguments
 

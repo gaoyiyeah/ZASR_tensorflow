@@ -7,7 +7,7 @@ import sys, os
 import argparse
 import functools
 
-sys.path.append(os.path.dirname(__file__) + "/../")
+sys.path.insert(0, os.path.dirname(__file__) + "/../")
 from data_utils.normalizer import FeatureNormalizer
 from data_utils.audio_featurizer import AudioFeaturizer
 from utils.utility import add_arguments, print_arguments
